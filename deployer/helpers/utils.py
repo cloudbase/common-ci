@@ -1,3 +1,51 @@
+import os
+import platform
+from gevent import subprocess
+
+SYS = platform.system()
+
+def is_exe(path):
+    if os.path.isfile(path) is False:
+        return False
+    if SYS == "Windows":
+        pathext = os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC")
+        for i in pathext.split(os.pathsep):
+            if path.endswith(i):
+                return True
+    else:
+        if os.access(path, os.X_OK):
+            return True
+    return False
+
+
+def which(program):
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
+
+def add_apt_ppa(ppa):
+    subprocess.check_call([
+        "sudo", "-n", "apt-add-repository", "-y", ppa,
+    ])
+
+
+def install_apt_packages(pkgs):
+    apt = ["sudo", "-n", "apt-get", "-y", "--option=Dpkg::Options::=--force-confold", "install"]
+    apt.extend(pkgs)
+    subprocess.check_call(apt)
+
+
+def apt_update():
+    subprocess.check_call(["sudo", "-n", "apt-get", "update"])
+
 
 class BundleGenerator(object):
     _AD_GIT_URL       = 'https://github.com/cloudbase/active-directory.git'
@@ -104,13 +152,14 @@ class BundleGenerator(object):
         }
 
         if self.options.nr_ad_units > 0:
+            ad_service_name = "active-directory"
             ad_charm = self._get_ad_service(
                 nr_units=self.options.nr_ad_units,
                 domain_name=self.options.ad_domain_name,
                 admin_password=self.options.ad_admin_password)
-            ad_charm_dict = {'active-directory': ad_charm}
+            ad_charm_dict = {ad_service_name: ad_charm}
             bundle_content['nova']['relations'].append([hyper_v_service_name,
-                                                        'active-directory'])
+                                                        ad_service_name])
             bundle_content['nova']['services'].update(ad_charm_dict)
 
         return bundle_content
