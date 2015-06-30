@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+import os
+import sys
+
+PYTHON_PATH = os.path.dirname(os.path.abspath(os.path.normpath(sys.argv[0])))
+sys.path.append(PYTHON_PATH)
+
 from gevent import monkey
 monkey.patch_all()
 
@@ -247,6 +253,17 @@ class Deployer(object):
             all_units.update(units)
         all_active = self._analize_units(all_units, debug)
         if all_active:
+            unit_ips = {}
+            for i in all_units:
+                name = i.split("/")[0][:-len("-%s" % self.uuid)].replace('-', "_")
+                ip = self.juju.get_private_address(i)["PrivateAddress"]
+                if name in unit_ips:
+                    unit_ips[name] += ",%s" % ip
+                else:
+                    unit_ips[name] = ip
+            with open("nodes", "w") as fd:
+                for i in unit_ips.keys():
+                    fd.write("%s=%s\n" % (i.upper(), unit_ips[i]))
             return True
         # Juju retains the error returned by the MaaS API in case MaaS
         # errored out while the acquire API call was made. In this scenario,

@@ -86,14 +86,19 @@ class MaaSBaseClass(object):
         uri = "api/1.0/"
         return "%s/%s" % (self.url.path, uri)
 
-    def _get_resource_uri(self, op=None):
+    def _get_resource_uri(self, subresource=None, op=None, params=None):
         resource = self.RESOURCE
         if self.RESOURCE.startswith(self._api_path):
             resource = self.RESOURCE[len(self._api_path):]
 
         uri = "/api/1.0/%s/" % resource.strip("/")
+        if subresource:
+            uri += "%s/" % subresource.strip("/")
         if op:
             uri = "%s?op=%s" % (uri, op)
+        if params:
+            for i in params.keys():
+                uri += "&%s=%s" % (i, params[i])
         return uri 
 
     def _dispatch(self, uri, method, body=None):
@@ -167,6 +172,22 @@ class Node(MaaSBaseClass, ResourceMixin):
         nodes = self._get_resource_uri()
         return self._dispatch(nodes, "GET")
 
+
+class Events(MaaSBaseClass, ResourceMixin):
+
+    RESOURCE = "events"
+    
+    def get(self, node=None):
+        params = None
+        if node:
+            params = {"id": node}
+        return self._get(params=params)
+
+    def _get(self, params=None):
+        events = self._get_resource_uri(op="query", params=params)
+        print events
+        return self._dispatch(events, "GET")
+    
 
 class Nodes(MaaSBaseClass):
 
