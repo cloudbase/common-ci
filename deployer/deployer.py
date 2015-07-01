@@ -157,7 +157,7 @@ class Deployer(object):
         if os.path.isfile(bundle) is False:
             raise Exception("No such bundle file: %s" % bundle)
         args = [
-            "juju-deployer", "-S", "-c", bundle
+            "juju-deployer", "--local-mods", "-S", "-c", bundle
         ]
         subprocess.check_call(args)
 
@@ -193,6 +193,10 @@ class Deployer(object):
             except Empty:
                 gevent.sleep(1)
                 continue
+
+    @utils.exec_retry(retry=5)
+    def _juju_status(self, *args, **kw):
+        return self.juju.status(*args, **kw)
 
     def _get_machines(self, status):
         machines = []
@@ -280,10 +284,11 @@ class Deployer(object):
             svc = services.get(i)
             units = svc.get("Units")
             all_units.update(units)
+        # TODO: only do this if there are changes, not on every iteration.
         try:
             self._write_unit_ips(all_units)
-        except jujuclient.EnvError as err:
-            LOG.debug("Cound not write unit ips: %s" % err)
+        except jujuclient.EnvError:
+            LOG.debug("Cound not write unit ips")
         all_active = self._analize_units(all_units, debug)
         if all_active:
             return True
@@ -306,7 +311,7 @@ class Deployer(object):
         watched_machines = []
         iteration = 0
         while True:
-            status = self.juju.status(filters=("*%s*" % self.uuid))
+            status = self._juju_status(filters=("*%s*" % self.uuid))
             debug = False
             if iteration % 30 == 0:
                 debug = True
@@ -325,7 +330,7 @@ class Deployer(object):
     def _wait_for_teardown(self, machines=[]):
         while True:
             has_machines = False
-            status = self.juju.status()
+            status = self._juju_status()
             state_machines = status.get("Machines", {})
             for i in machines:
                 if state_machines.get(i):
@@ -345,7 +350,7 @@ class Deployer(object):
         gevent.killall(self.maas_watcher.watchers)
 
     def teardown(self):
-        status = self.juju.status(filters=("*%s*" % self.uuid))
+        status = self._juju_status(filters=("*%s*" % self.uuid))
         machines = self._get_machine_ids(status)
         service_names = self._get_service_names(status)
         for i in service_names:
