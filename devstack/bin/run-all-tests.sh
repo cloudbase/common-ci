@@ -1,12 +1,25 @@
 #!/bin/bash
 
+function help() {
+    echo "Required parameters:"
+    echo "    --include-file: the tempest test groups to be executed"
+    echo "    --exclude-file: tempest tests that have to be excluded"
+    echo "    --tests-dir: tempest execution folder"
+    echo "Optional parameters:"
+    echo "    --isolated-file: tempest tests that require to be executed isolated" 
+    echo "    --parallel-tests: number of tempest tests to run in parallel (DEFAULT: 4)"
+    echo "    --max-attempts: number of retries if a test fails (DEFAULT: 2)"
+    echo "    --log-file: name of the tempest run log file (including full path)"
+    echo "    --results-html-file: name of the html results file (including full path)"
+}
+
 while [ $# -gt 0 ]
 do
     case $1 in
         --include-file)
             INCLUDE_FILE=$2
             shift;;
-        --exclude_file)
+        --exclude-file)
             EXCLUDE_FILE=$2
             shift;;
         --isolated-file)
