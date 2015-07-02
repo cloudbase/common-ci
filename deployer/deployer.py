@@ -29,6 +29,7 @@ LOG.addHandler(ch)
 
 import helpers.utils as utils
 import helpers.maasclient as maasclient
+import jujuclient
 
 from gevent import subprocess
 from gevent.queue import Queue, Empty
@@ -42,12 +43,12 @@ subparsers = parser.add_subparsers(dest="action")
 deploy_parser = subparsers.add_parser('deploy')
 teardown_parser = subparsers.add_parser('teardown')
 
-teardown_parser.add_argument("--zuul-uuid", dest="zuul_uuid",                     
+teardown_parser.add_argument("--zuul-uuid", dest="zuul_uuid",
     type=str, required=True, help="Zuul uuid")
 
 deploy_parser.add_argument("--nr-ad-units", dest="nr_ad_units",
     type=int, default=0, help="Number of AD units to be deployed")
-deploy_parser.add_argument("--ad-service", dest="ad_service",                 
+deploy_parser.add_argument("--ad-service", dest="ad_service",
     type=str, help="Active directory service name")
 deploy_parser.add_argument("--nr-devstack-units", dest="nr_devstack_units",
     type=int, default=1, help="Number of DevStack units to be deployed")
@@ -156,7 +157,7 @@ class Deployer(object):
         if os.path.isfile(bundle) is False:
             raise Exception("No such bundle file: %s" % bundle)
         args = [
-            "juju-deployer", "-S", "-c", bundle
+            "juju-deployer", "--local-mods", "-S", "-c", bundle
         ]
         subprocess.check_call(args)
 
@@ -186,12 +187,16 @@ class Deployer(object):
         while True:
             try:
                 event = self.channel.get_nowait()
-                if event.get("status") == maasclient.FAILED_DEPLOYMENT:             
-                    raise Exception("Node %s entered failed deployment state" %     
+                if event.get("status") == maasclient.FAILED_DEPLOYMENT:
+                    raise Exception("Node %s entered failed deployment state" %
                         event.get("instance"))
             except Empty:
-                gevent.sleep(1)                                                 
+                gevent.sleep(1)
                 continue
+
+    @utils.exec_retry(retry=5)
+    def _juju_status(self, *args, **kw):
+        return self.juju.status(*args, **kw)
 
     def _get_machines(self, status):
         machines = []
@@ -201,19 +206,19 @@ class Deployer(object):
         for i in m.keys():
             instanceId = m[i].get("InstanceId")
             if instanceId == "pending":
-                continue 
+                continue
             machines.append(m[i].get("InstanceId"))
         return machines
 
     def _get_machine_ids(self, status):
-        m = status.get("Machines")                    
-        if m is None:                                 
+        m = status.get("Machines")
+        if m is None:
             return []
         return m.keys()
 
     def _get_service_names(self, status):
         m = status.get("Services")
-        if m is None:                                                           
+        if m is None:
             return []
         return m.keys()
 
@@ -237,6 +242,34 @@ class Deployer(object):
                 all_active = False
         return all_active
 
+    def _analize_machines(self, machines):
+        for i in machines.keys():
+            machine = machines.get(i)
+            if machine["Err"]:
+                raise Exception("MaaS returned error when allocating %s: %s" %
+                    (i, machine["Err"]))
+            agent = machine.get("Agent")
+            if agent:
+                status = agent.get("Status")
+                info = agent.get("Info")
+                err = agent.get("Err")
+                if status == "error" or err:
+                    raise Exception(
+                        "Machine agent is in error state: %r" % info)
+
+    def _write_unit_ips(self, units):
+        unit_ips = {}
+        for i in units:
+            name = i.split("/")[0][:-len("-%s" % self.uuid)].replace('-', "_")
+            ip = self.juju.get_private_address(i)["PrivateAddress"]
+            if name in unit_ips:
+                unit_ips[name] += ",%s" % ip
+            else:
+                unit_ips[name] = ip
+        nodes = os.path.join(os.getcwd(), "nodes")
+        with open(nodes, "w") as fd:
+            for i in unit_ips.keys():
+                fd.write("%s=%s\n" % (i.upper(), unit_ips[i]))
 
     def _analize(self, status, debug=False):
         """
@@ -251,19 +284,13 @@ class Deployer(object):
             svc = services.get(i)
             units = svc.get("Units")
             all_units.update(units)
+        # TODO: only do this if there are changes, not on every iteration.
+        try:
+            self._write_unit_ips(all_units)
+        except jujuclient.EnvError:
+            LOG.debug("Cound not write unit ips")
         all_active = self._analize_units(all_units, debug)
         if all_active:
-            unit_ips = {}
-            for i in all_units:
-                name = i.split("/")[0][:-len("-%s" % self.uuid)].replace('-', "_")
-                ip = self.juju.get_private_address(i)["PrivateAddress"]
-                if name in unit_ips:
-                    unit_ips[name] += ",%s" % ip
-                else:
-                    unit_ips[name] = ip
-            with open("nodes", "w") as fd:
-                for i in unit_ips.keys():
-                    fd.write("%s=%s\n" % (i.upper(), unit_ips[i]))
             return True
         # Juju retains the error returned by the MaaS API in case MaaS
         # errored out while the acquire API call was made. In this scenario,
@@ -271,11 +298,7 @@ class Deployer(object):
         machines = status.get("Machines")
         if machines is None:
             return False
-        for i in machines.keys():
-            machine = machines.get(i)
-            if machine["Err"]:
-                raise Exception("MaaS returned error when allocating %s: %s" %
-                    (i, machine["Err"]))
+        self._analize_machines(machines)
 
     def _poll_services(self):
         """
@@ -288,7 +311,7 @@ class Deployer(object):
         watched_machines = []
         iteration = 0
         while True:
-            status = self.juju.status(filters=("*%s*" % self.uuid))
+            status = self._juju_status(filters=("*%s*" % self.uuid))
             debug = False
             if iteration % 30 == 0:
                 debug = True
@@ -304,13 +327,18 @@ class Deployer(object):
             iteration += 1
             gevent.sleep(3)
 
-    def _wait_for_teardown(self):
+    def _wait_for_teardown(self, machines=[]):
         while True:
-            status = self.juju.status(filters=("*%s*" % self.uuid))
-            if len(status.get("Services")) == 0:
+            has_machines = False
+            status = self._juju_status()
+            state_machines = status.get("Machines", {})
+            for i in machines:
+                if state_machines.get(i):
+                    has_machines = True
+            if has_machines is False:
                 break
             gevent.sleep(3)
-        
+
     def deploy(self):
         self._ensure_workdir()
         self._ensure_dependencies()
@@ -322,13 +350,13 @@ class Deployer(object):
         gevent.killall(self.maas_watcher.watchers)
 
     def teardown(self):
-        status = self.juju.status(filters=("*%s*" % self.uuid))
+        status = self._juju_status(filters=("*%s*" % self.uuid))
         machines = self._get_machine_ids(status)
         service_names = self._get_service_names(status)
         for i in service_names:
             self.juju.destroy_service(i)
         self.juju.destroy_machines(machines, force=True)
-        self._wait_for_teardown()
+        self._wait_for_teardown(machines)
 
 
 if __name__ == '__main__':

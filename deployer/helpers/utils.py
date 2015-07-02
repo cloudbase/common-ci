@@ -1,8 +1,29 @@
 import os
 import platform
+import gevent
+
 from gevent import subprocess
 
 SYS = platform.system()
+
+
+def exec_retry(retry=5):
+    def wrap(f):
+        def wrap_f(*args, **kw):
+            count = 0
+            err = ""
+            while count < retry:
+                try:
+                    return f(*args, **kw)
+                    break
+                except Exception as err:
+                    gevent.sleep(3)
+                    err = err
+                    count += 1
+            return f(*args, **kw)
+        return wrap_f
+    return wrap
+
 
 def is_exe(path):
     if os.path.isfile(path) is False:
