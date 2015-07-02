@@ -20,9 +20,9 @@ tests_dir=$1
 
 BASEDIR=$(dirname $0)
 
-include_tests_file=$3
-exclude_tests_file=$4
-isolated_tests_file=$5
+include_tests_file=$2
+exclude_tests_file=$3
+isolated_tests_file=$4
 
 include_tests=(`awk 'NF && $1!~/^#/' $include_tests_file`)
 
