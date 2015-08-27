@@ -28,5 +28,3 @@ tempest.scenario.test_network_advanced_server_ops.TestNetworkAdvancedServerOps.t
 # Note that corresponding XML tests pass
 tempest.api.compute.admin.test_simple_tenant_usage.TenantUsagesTestJSON.test_get_usage_tenant
 tempest.api.compute.admin.test_simple_tenant_usage.TenantUsagesTestJSON.test_get_usage_tenant_with_non_admin_user
-
-
