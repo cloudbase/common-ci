@@ -63,6 +63,8 @@ pushd $BASEDIR
 
 TESTS_FILE=$(tempfile)
 
+. $TESTS_DIR/.tox/venv/bin/activate
+
 $BASEDIR/get-tests.sh $TESTS_DIR $INCLUDE_FILE $EXCLUDE_FILE $ISOLATED_FILE > $TESTS_FILE
 
 echo "Running tests from: $TESTS_FILE"
@@ -89,6 +91,8 @@ if [ -f "$ISOLATED_FILE" ]; then
 fi
 
 rm $TESTS_FILE
+
+deactivate
 
 echo "Generating HTML report..."
 $BASEDIR/get-results-html.sh $LOG_FILE $RESULTS_HTML_FILE
