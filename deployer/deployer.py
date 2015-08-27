@@ -43,59 +43,13 @@ subparsers = parser.add_subparsers(dest="action")
 deploy_parser = subparsers.add_parser('deploy')
 teardown_parser = subparsers.add_parser('teardown')
 
-teardown_parser.add_argument("--zuul-uuid", dest="zuul_uuid",
-    type=str, required=True, help="Zuul uuid")
+teardown_parser.add_argument("--search-string", dest="search_string",
+    type=str, required=True, help="Deploy uuid")
 
-deploy_parser.add_argument("--nr-ad-units", dest="nr_ad_units",
-    type=int, default=0, help="Number of AD units to be deployed")
-deploy_parser.add_argument("--ad-service", dest="ad_service",
-    type=str, help="Active directory service name")
-deploy_parser.add_argument("--nr-devstack-units", dest="nr_devstack_units",
-    type=int, default=1, help="Number of DevStack units to be deployed")
-deploy_parser.add_argument("--nr-hyperv-units", dest="nr_hyper_v_units",
-    type=int, default=1, help="Number of Hyper-V units to be deployed")
-deploy_parser.add_argument("--zuul-branch", dest="zuul_branch",
-    type=str, default="master", help="Zuul branch")
-deploy_parser.add_argument("--zuul-change", dest="zuul_change",
-    type=str, required=True, help="Zuul change")
-deploy_parser.add_argument("--zuul-project", dest="zuul_project",
-    type=str, required=True, help="Zuul project")
-deploy_parser.add_argument("--zuul-ref", dest="zuul_ref",
-    type=str, required=True, help="Zuul ref")
-deploy_parser.add_argument("--zuul-uuid", dest="zuul_uuid",
-    type=str, required=True, help="Zuul uuid")
-deploy_parser.add_argument("--zuul-url", dest="zuul_url",
-    type=str, required=True, help="Zuul url")
-deploy_parser.add_argument("--data-ports", dest="data_ports",
-    type=str, required=True, help="Data ports")
-deploy_parser.add_argument("--external-ports", dest="external_ports",
-    type=str, required=True, help="External ports")
-deploy_parser.add_argument("--ad-domain-name", dest="ad_domain_name",
-    type=str, default="cloudbase.local", help="AD domain name")
-deploy_parser.add_argument("--ad-admin-password", dest="ad_admin_password",
-    type=str, help="AD administrator password")
-deploy_parser.add_argument("--hyper-v-extra-python-packages",
-    dest="hyper_v_extra_python_packages",
-    type=str, help="Hyper-V extra python packages")
-deploy_parser.add_argument("--vlan-range", dest="vlan_range",
-    type=str, required=True, help="VLAN range")
-deploy_parser.add_argument("--devstack-extra-packages",
-    dest="devstack_extra_packages",
-    type=str, help="DevStack extra packages")
-deploy_parser.add_argument("--devstack-extra-python-packages",
-    dest="devstack_extra_python_packages",
-    type=str, help="DevStack extra python packages")
-deploy_parser.add_argument("--devstack-enabled-services",
-    dest="devstack_enabled_services", type=str,
-    help="DevStack enabled services")
-deploy_parser.add_argument("--devstack-disabled-services",
-    dest="devstack_disabled_services", type=str,
-    help="DevStack disabled services")
-deploy_parser.add_argument("--devstack-enabled-plugins",
-    dest="devstack_enabled_plugins", type=str, help="DevStack enabled plugins")
+deploy_parser.add_argument("--template", dest="template",
+    type=str, required=True, help="Juju deployer template") 
 
-
-class MaaSInstanceWatcher(maasclient.Nodes):
+classMaaSInstanceWatcher(maasclient.Nodes):
 
     def __init__(self, maas_url, maas_token, queue):
         super(MaaSInstanceWatcher, self).__init__(maas_url, maas_token)
@@ -128,8 +82,9 @@ class Deployer(object):
     def __init__(self, options):
         self.options = options
         self.juju = Environment.connect('maas')
-        self.uuid = options.zuul_uuid
-        self.bundle_generator = utils.BundleGenerator(self.options)
+        self.search_string = options.search_string
+        self.bundle = self.options.template
+        #self.bundle_generator = utils.BundleGenerator(self.options)
         self.home = os.environ.get("HOME", "/tmp")
         self.workdir = os.path.join(self.home, ".deployer")
         self.channel = Queue()
@@ -161,18 +116,18 @@ class Deployer(object):
         ]
         subprocess.check_call(args)
 
-    def _render_yaml(self, project):
-        proj = project.split("/")[-1]
-        func = getattr(self.bundle_generator, "%s_bundle" % proj)
-        if not func:
-            raise ValueError(
-                "Project %s is not supported by bundler" % project)
-        bundle = func()
-        bundle_file = os.path.join(self.workdir, self.uuid)
-        with open(bundle_file, "w") as fd:
-            yaml.dump(bundle, stream=fd, default_flow_style=False,
-                allow_unicode=True, encoding=None)
-        return bundle_file
+    #def _render_yaml(self, project):
+    #    proj = project.split("/")[-1]
+    #    func = getattr(self.bundle_generator, "%s_bundle" % proj)
+    #    if not func:
+    #        raise ValueError(
+    #            "Project %s is not supported by bundler" % project)
+    #    bundle = func()
+    #    bundle_file = os.path.join(self.workdir, self.search_string)
+    #    with open(bundle_file, "w") as fd:
+    #        yaml.dump(bundle, stream=fd, default_flow_style=False,
+    #            allow_unicode=True, encoding=None)
+    #    return bundle_file
 
     def _start_maas_watcher(self, machine):
         """
@@ -260,7 +215,7 @@ class Deployer(object):
     def _write_unit_ips(self, units):
         unit_ips = {}
         for i in units:
-            name = i.split("/")[0][:-len("-%s" % self.uuid)].replace('-', "_")
+            name = i.split("/")[0][:-len("-%s" % self.search_string)].replace('-', "_")
             ip = self.juju.get_private_address(i)["PrivateAddress"]
             if name in unit_ips:
                 unit_ips[name] += ",%s" % ip
@@ -311,7 +266,7 @@ class Deployer(object):
         watched_machines = []
         iteration = 0
         while True:
-            status = self._juju_status(filters=("*%s*" % self.uuid))
+            status = self._juju_status(filters=("*%s*" % self.search_string))
             debug = False
             if iteration % 30 == 0:
                 debug = True
@@ -342,15 +297,15 @@ class Deployer(object):
     def deploy(self):
         self._ensure_workdir()
         self._ensure_dependencies()
-        bundle = self._render_yaml(self.options.zuul_project)
-        self._run_deployer(bundle)
+        #bundle = self._render_yaml(self.options.zuul_project)
+        self._run_deployer(self.bundle)
         self.eventlets.append(gevent.spawn(self._consume_events))
         self._poll_services()
         gevent.killall(self.eventlets)
         gevent.killall(self.maas_watcher.watchers)
 
     def teardown(self):
-        status = self._juju_status(filters=("*%s*" % self.uuid))
+        status = self._juju_status(filters=("*%s*" % self.search_string))
         machines = self._get_machine_ids(status)
         service_names = self._get_service_names(status)
         for i in service_names:
@@ -363,9 +318,6 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     deployer = Deployer(opt)
     if opt.action == "deploy":
-        if opt.nr_ad_units > 0 and opt.ad_admin_password is None:
-            parser.error(
-                "Parameter --ad-admin-password is mandatory if deploying AD")
         deployer.deploy()
     if opt.action == "teardown":
         deployer.teardown()
