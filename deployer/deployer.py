@@ -46,6 +46,8 @@ teardown_parser = subparsers.add_parser('teardown')
 teardown_parser.add_argument("--search-string", dest="search_string",
     type=str, required=True, help="Deploy uuid")
 
+deploy_parser.add_argument("--search-string", dest="search_string",
+    type=str, required=False, help="Deploy uuid")
 deploy_parser.add_argument("--template", dest="template",
     type=str, required=True, help="Juju deployer template") 
 
