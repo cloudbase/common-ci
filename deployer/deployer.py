@@ -49,7 +49,7 @@ teardown_parser.add_argument("--search-string", dest="search_string",
 deploy_parser.add_argument("--template", dest="template",
     type=str, required=True, help="Juju deployer template") 
 
-classMaaSInstanceWatcher(maasclient.Nodes):
+class MaaSInstanceWatcher(maasclient.Nodes):
 
     def __init__(self, maas_url, maas_token, queue):
         super(MaaSInstanceWatcher, self).__init__(maas_url, maas_token)
