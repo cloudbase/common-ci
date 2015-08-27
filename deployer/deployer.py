@@ -269,8 +269,9 @@ class Deployer(object):
         iteration = 0
         while True:
             status = self._juju_status(filters=("*%s*" % self.search_string))
+            #LOG.debug("%r" % status)
             debug = False
-            if iteration % 30 == 0:
+            if iteration % 1 == 0:
                 debug = True
             all_active = self._analize(status, debug=debug)
             if all_active:

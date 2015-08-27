@@ -4,7 +4,9 @@ import uuid
 import urlparse
 import json
 import datetime
+import logging
 
+LOG = logging.getLogger()
 
 DEFAULT = 0
 #: The node has been created and has a system ID assigned to i
@@ -84,14 +86,15 @@ class MaaSBaseClass(object):
     @property
     def _api_path(self):
         uri = "api/1.0/"
-        return "%s/%s" % (self.url.path, uri)
+        return "%s/%s" % (self.url.path.rstrip("/"), uri)
 
     def _get_resource_uri(self, subresource=None, op=None, params=None):
         resource = self.RESOURCE
+        #LOG.debug("%r --> %r" %(resource, self._api_path))
         if self.RESOURCE.startswith(self._api_path):
             resource = self.RESOURCE[len(self._api_path):]
 
-        uri = "/api/1.0/%s/" % resource.strip("/")
+        uri = "api/1.0/%s/" % resource.strip("/")
         if subresource:
             uri += "%s/" % subresource.strip("/")
         if op:
@@ -119,6 +122,7 @@ class MaaSBaseClass(object):
         headers = oauth_request.to_header()
         url = "%s%s" % (self.maas_url, uri)
         http = httplib2.Http()
+        LOG.debug("Sending request to: %s" % url)
         response, content = http.request(url, method, body=body, headers=headers)
         self._check_response(response)
         body = json.loads(content)
