@@ -45,11 +45,19 @@ teardown_parser = subparsers.add_parser('teardown')
 
 teardown_parser.add_argument("--search-string", dest="search_string",
     type=str, required=True, help="Deploy uuid")
+teardown_parser.add_argument("--template", dest="template",
+    type=str, required=False, help="Juju deployer template")
 
 deploy_parser.add_argument("--search-string", dest="search_string",
     type=str, required=False, help="Deploy uuid")
 deploy_parser.add_argument("--template", dest="template",
     type=str, required=True, help="Juju deployer template") 
+
+
+def exception_handler(green):
+    LOG.error("Greenlet %r failed with an exception" % green)
+    sys.exit(1)
+
 
 class MaaSInstanceWatcher(maasclient.Nodes):
 
@@ -76,7 +84,9 @@ class MaaSInstanceWatcher(maasclient.Nodes):
     def start_watcher(self, node):
         LOG.debug("Starting watcher for node: %s" % node)
         n = self.get(node)
-        self.watchers.append(gevent.spawn(self._watch, n))
+        e = gevent.spawn(self._watch, n)
+        e.link_exception(exception_handler)
+        self.watchers.append(e)
 
 
 class Deployer(object):
@@ -137,6 +147,7 @@ class Deployer(object):
         Failed Deployment, then raise an exception
         """
         e = gevent.spawn(self.maas_watcher.start_watcher, machine)
+        e.link_exception(exception_handler)
         self.eventlets.append(e)
 
     def _consume_events(self):
@@ -302,7 +313,11 @@ class Deployer(object):
         self._ensure_dependencies()
         #bundle = self._render_yaml(self.options.zuul_project)
         self._run_deployer(self.bundle)
-        self.eventlets.append(gevent.spawn(self._consume_events))
+
+        e = gevent.spawn(self._consume_events)
+        e.link_exception(exception_handler)
+        self.eventlets.append(e)
+
         self._poll_services()
         gevent.killall(self.eventlets)
         gevent.killall(self.maas_watcher.watchers)
