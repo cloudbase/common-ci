@@ -31,3 +31,4 @@ tempest.api.compute.admin.test_simple_tenant_usage.TenantUsagesTestJSON.test_get
 
 # We want to test the compute node, not devstack
 tempest.api.compute.admin
+tempest.scenario.test_encrypted_cinder_volumes.TestEncryptedCinderVolumes
