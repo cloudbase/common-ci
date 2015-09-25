@@ -27,15 +27,14 @@ class BundleGenerator(object):
                                  nr_units, ad_options)
 
     def _get_hyper_v_service(self, nr_units, download_mirror, extra_python_packages=None,
-                             git_user_email=None, git_user_name=None, wheel_mirror=None,
-                             ppy_mirror=None, vmswitch_name=None, vmswitch_management=None,
+                             git_user_email=None, git_user_name=None, pypi_mirror=None,
+                             vmswitch_name=None, vmswitch_management=None,
                              ad_user_name=None, enable_freerdp_console=None):
         hyper_v_options = {'download-mirror': download_mirror,
                            'extra-python-packages': extra_python_packages,
                            'git-user-email': git_user_email,
                            'git-user-name': git_user_name,
-                           'wheel-mirror': wheel_mirror,
-                           'ppy-mirror': ppy_mirror,
+                           'pypi-mirror': pypi_mirror,
                            'vmswitch-name': vmswitch_name,
                            'vmswitch-management': vmswitch_management,
                            'ad-user-name': ad_user_name,
@@ -81,7 +80,7 @@ class BundleGenerator(object):
             extra_python_packages=self.options.hyper_v_extra_python_packages,
             git_user_email='hyper-v_ci@microsoft.com',
             git_user_name='Hyper-V CI',
-            wheel_mirror='http://64.119.130.115/wheels')
+            pypi_mirror='http://64.119.130.115/wheels')
 
         devstack_service = self._get_devstack_service(
             nr_units=self.options.nr_devstack_units,
