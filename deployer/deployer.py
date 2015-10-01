@@ -124,7 +124,7 @@ class Deployer(object):
         if os.path.isfile(bundle) is False:
             raise Exception("No such bundle file: %s" % bundle)
         args = [
-            "juju-deployer", "--local-mods", "-S", "-c", bundle
+            "juju-deployer", "-r", "3", "--local-mods", "-S", "-c", bundle
         ]
         subprocess.check_call(args)
 
