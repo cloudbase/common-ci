@@ -31,6 +31,7 @@ import helpers.utils as utils
 import helpers.maasclient as maasclient
 import jujuclient
 import netaddr
+import socket
 
 from gevent import subprocess
 from gevent.queue import Queue, Empty
