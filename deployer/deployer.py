@@ -30,6 +30,7 @@ LOG.addHandler(ch)
 import helpers.utils as utils
 import helpers.maasclient as maasclient
 import jujuclient
+import netaddr
 
 from gevent import subprocess
 from gevent.queue import Queue, Empty
@@ -225,11 +226,19 @@ class Deployer(object):
                     raise Exception(
                         "Machine agent is in error state: %r" % info)
 
+    def _resolve_address(self, addr):
+        try:
+            netaddr.IPAddress(addr)
+            return addr
+        except netaddr.core.AddrFormatError:
+            return socket.gethostbyname(addr)
+
     def _write_unit_ips(self, units):
         unit_ips = {}
         for i in units:
             name = i.split("/")[0][:-len("-%s" % self.search_string)].replace('-', "_")
-            ip = self.juju.get_private_address(i)["PrivateAddress"]
+            addr = self.juju.get_private_address(i)["PrivateAddress"]
+            ip = self._resolve_address(addr)
             if name in unit_ips:
                 unit_ips[name] += ",%s" % ip
             else:
