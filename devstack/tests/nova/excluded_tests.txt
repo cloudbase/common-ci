@@ -3,6 +3,7 @@
 tempest.api.compute.servers.test_attach_interfaces.AttachInterfacesTestJSON.test_create_list_show_delete_interfaces
 tempest.api.compute.servers.test_attach_interfaces.AttachInterfacesTestXML.test_create_list_show_delete_interfaces
 tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_hotplug_nic
+tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_port_security_macspoofing_port
 
 # Unsupported consoles (Hyper-V uses RDP, not VNC or SPICE)
 tempest.api.compute.v3.servers.test_server_actions.ServerActionsV3Test.test_get_spice_console
@@ -48,3 +49,5 @@ tempest.api.volume.admin.test_volume_types
 tempest.api.volume.admin.test_volume_services
 tempest.api.volume.admin.test_volume_quotas
 tempest.api.volume.admin.test_multi_backend
+
+tempest.scenario.test_network_v6.TestGettingAddress
