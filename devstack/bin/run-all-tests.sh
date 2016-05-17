@@ -63,7 +63,7 @@ pushd $BASEDIR
 
 TESTS_FILE=$(tempfile)
 
-. $TESTS_DIR/.tox/venv/bin/activate
+#. $TESTS_DIR/.tox/tempest/bin/activate
 
 $BASEDIR/get-tests.sh $TESTS_DIR $INCLUDE_FILE $EXCLUDE_FILE $ISOLATED_FILE > $TESTS_FILE
 
@@ -92,7 +92,7 @@ fi
 
 rm $TESTS_FILE
 
-deactivate
+#deactivate
 
 echo "Generating HTML report..."
 $BASEDIR/get-results-html.sh $LOG_FILE $RESULTS_HTML_FILE
