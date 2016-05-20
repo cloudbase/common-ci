@@ -51,3 +51,17 @@ tempest.api.volume.admin.test_volume_quotas
 tempest.api.volume.admin.test_multi_backend
 
 tempest.scenario.test_network_v6.TestGettingAddress
+
+# Issues fixed in Mitaka but not working on Liberty because of Python 3.4 
+tempest.api.compute.servers.test_delete_server.DeleteServersTestJSON.test_delete_server_while_in_shelved_state
+tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON.test_create_backup
+tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON.test_shelve_unshelve_server
+tempest.api.compute.servers.test_servers_negative.ServersNegativeTestJSON.test_shelve_shelved_server
+tempest.scenario.test_snapshot_pattern.TestSnapshotPattern.test_snapshot_pattern
+
+# Further investigation needed. For the moment looks like cirros instance needs more space.
+tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_subnet_details
+
+# An exception is not caught properly. The issue is present in stable/mitaka and master branches too
+tempest.scenario.test_volume_boot_pattern.TestVolumeBootPattern.test_create_ebs_image_and_check_boot
+tempest.scenario.test_volume_boot_pattern.TestVolumeBootPatternV2.test_create_ebs_image_and_check_boot
