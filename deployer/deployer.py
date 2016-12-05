@@ -58,6 +58,20 @@ LOG.addHandler(ch)
 
 parser = argparse.ArgumentParser(prog="Deployer")
 subparsers = parser.add_subparsers(dest="action")
+parser.add_argument("--environment",
+                    dest="environment",
+                    type=str,
+                    required=True,
+                    help="MAAS environment required in order to "
+                         "connect to jujuclient. It has to be in the "
+                         "following format: 'controller-name:model-name' "
+                         "Example: 'maas:default'")
+parser.add_argument("--clouds-and-credentials",
+                    dest="clouds_and_credentials",
+                    type=str,
+                    required=True,
+                    help="Specified yaml has to contain the 'endpoint' "
+                         "of MAAS and 'maas-oauth'")
 
 teardown_parser = subparsers.add_parser('teardown')
 teardown_parser.add_argument("--search-string",
@@ -200,21 +214,14 @@ class Deployer(object):
         self.machines = {}
         self.home = os.environ.get("HOME", "/tmp")
         self.workdir = os.path.join(self.home, ".deployer")
-        self.juju = environment.Environment.connect('maas:default')
+        self.juju = environment.Environment.connect(self.options.environment)
         self.juju_watcher = self.juju.get_watch()
-        self.juju_home = os.environ.get(
-            "JUJU_DATA", os.path.join(self.home, ".local/share/juju"))
 
-        clouds_file = os.path.join(self.juju_home, "clouds.yaml")
-        with open(clouds_file, 'r') as f:
-            clouds = yaml.load(f)
-        maas_server = clouds['clouds']['maas']['endpoint']
+        with open(self.options.clouds_and_credentials, 'r') as f:
+            content = yaml.load(f)
+        maas_server = content['endpoint']
+        maas_oauth = content['maas-oauth']
 
-        creds_file = os.path.join(self.juju_home, "credentials.yaml")
-        with open(creds_file, 'r') as f:
-            creds = yaml.load(f)
-        maas_creds = creds['credentials']['maas'].itervalues().next()
-        maas_oauth = maas_creds['maas-oauth']
         self.channel = queue.Queue()
         self.eventlets = []
         self.maas_watcher = MaaSInstanceWatcher(maas_server,
