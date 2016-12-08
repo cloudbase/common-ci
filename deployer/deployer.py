@@ -134,6 +134,12 @@ class MaaSInstanceWatcher(object):
         self._parse_token(maas_token)
 
     def _watch(self, node):
+        response = self._perform_API_request(
+            self.maas_url, 'api/2.0/nodes/%s/' % node,
+            'GET', self.key, self.secret, self.consumer_key)
+        machine_name = response.get('hostname')
+        LOG.debug("Starting watcher for node: %s (%s)" % (machine_name, node))
+
         node_state = None
         while True:
             response = self._perform_API_request(
@@ -141,8 +147,9 @@ class MaaSInstanceWatcher(object):
                 'GET', self.key, self.secret, self.consumer_key)
             status = response.get('status')
             if node_state != status:
-                LOG.debug("Node %s changed status to: %s" % (
-                          response.get('system_id'), STATE[status]))
+                LOG.debug("Node %s (%s) changed status to: %s" % (
+                          machine_name, response.get('system_id'),
+                          STATE[status]))
                 node_state = status
             payload = {
                 "status": STATE[status],
@@ -151,12 +158,12 @@ class MaaSInstanceWatcher(object):
             }
             if STATE[status] == "FAILED_DEPLOYMENT":
                 self.queue.put(payload)
-                LOG.debug("Stopping watcher for node %s" % node)
+                LOG.debug("Stopping watcher for node %s (%s)"
+                          % (machine_name, node))
                 return
             gevent.sleep(5)
 
     def start_maas_watcher(self, node):
-        LOG.debug("Starting watcher for node: %s" % node)
         e = gevent.spawn(self._watch, node)
         e.link_exception(exception_handler)
         self.watchers.append(e)
@@ -516,8 +523,6 @@ class Deployer(object):
                 "juju-id": machine_data["id"],
                 "series": machine_data["series"],
                 "tags": tags,
-                # "tags": machine_data.get(
-                #     "hardware-characteristics").get("tags"),
             }
 
         if not cached_data["analized"] and machine_data[
