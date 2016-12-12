@@ -58,20 +58,17 @@ LOG.addHandler(ch)
 
 parser = argparse.ArgumentParser(prog="Deployer")
 subparsers = parser.add_subparsers(dest="action")
-parser.add_argument("--environment",
-                    dest="environment",
-                    type=str,
-                    required=True,
-                    help="MAAS environment required in order to "
-                         "connect to jujuclient. It has to be in the "
-                         "following format: 'controller-name:model-name' "
-                         "Example: 'maas:default'")
 parser.add_argument("--clouds-and-credentials",
                     dest="clouds_and_credentials",
                     type=str,
                     required=True,
-                    help="Specified yaml has to contain the 'endpoint' "
-                         "of MAAS and 'maas-oauth'")
+                    help="Specified yaml must contain the following: "
+                         "'endpoint' of MAAS, 'maas-oauth', "
+                         "'environment' of MAAS used to run jujuclient. "
+                         "Example of yaml:\n "
+                         "'endpoint': 'http://<ip>/MAAS/'\n"
+                         "'maas-oauth': 'maas-oauth'\n"
+                         "'environment': 'controller-name:model-name'\n")
 
 teardown_parser = subparsers.add_parser('teardown')
 teardown_parser.add_argument("--search-string",
@@ -221,13 +218,15 @@ class Deployer(object):
         self.machines = {}
         self.home = os.environ.get("HOME", "/tmp")
         self.workdir = os.path.join(self.home, ".deployer")
-        self.juju = environment.Environment.connect(self.options.environment)
-        self.juju_watcher = self.juju.get_watch()
 
         with open(self.options.clouds_and_credentials, 'r') as f:
             content = yaml.load(f)
         maas_server = content['endpoint']
         maas_oauth = content['maas-oauth']
+        maas_environment = content['environment']
+
+        self.juju = environment.Environment.connect(maas_environment)
+        self.juju_watcher = self.juju.get_watch()
 
         self.channel = queue.Queue()
         self.eventlets = []
