@@ -64,11 +64,14 @@ parser.add_argument("--clouds-and-credentials",
                     required=True,
                     help="Specified yaml must contain the following: "
                          "'endpoint' of MAAS, 'maas-oauth', "
-                         "'environment' of MAAS used to run jujuclient. "
+                         "'environment' of MAAS, 'user' and 'password'"
+                         "of juju user used to run jujuclient. "
                          "Example of yaml:\n "
                          "'endpoint': 'http://<ip>/MAAS/'\n"
                          "'maas-oauth': 'maas-oauth'\n"
-                         "'environment': 'controller-name:model-name'\n")
+                         "'environment': 'controller-name:model-name'\n"
+                         "'user': 'user'\n"
+                         "'password': 'password'\n")
 
 teardown_parser = subparsers.add_parser('teardown')
 teardown_parser.add_argument("--search-string",
@@ -77,10 +80,10 @@ teardown_parser.add_argument("--search-string",
                              required=True,
                              help="Deploy uuid")
 teardown_parser.add_argument("--template",
-                             dest="template",
-                             type=str,
-                             required=False,
-                             help="Juju deployer template")
+                              dest="template",
+                              type=str,
+                              required=False,
+                              help="Juju deployer template")
 
 deploy_parser = subparsers.add_parser('deploy')
 deploy_parser.add_argument("--search-string",
@@ -224,9 +227,14 @@ class Deployer(object):
         maas_server = content['endpoint']
         maas_oauth = content['maas-oauth']
         maas_environment = content['environment']
+        user = 'user-' + content['user']
+        password = content['password']
 
         self.juju = environment.Environment.connect(maas_environment)
-        self.juju_watcher = self.juju.get_watch()
+        LOG.debug("Connection started with: %s" % self.juju.endpoint)
+        self.conn = environment.Environment(endpoint=self.juju.endpoint)
+        self.conn.login(user=user, password=password)
+        self.juju_watcher = self.conn.get_watch()
 
         self.channel = queue.Queue()
         self.eventlets = []
