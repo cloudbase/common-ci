@@ -221,7 +221,7 @@ class Deployer(object):
         LOG.debug("Connection started with: %s" % self.juju.endpoint)
         self.conn = environment.Environment(endpoint=self.juju.endpoint)
         self.conn.login(user=user, password=password)
-        self.juju_watcher = self.conn.get_watch()
+        self.juju_watcher = self.juju.get_watch(connection=self.conn)
 
         self.channel = queue.Queue()
         self.eventlets = []
