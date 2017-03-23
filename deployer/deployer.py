@@ -79,11 +79,6 @@ teardown_parser.add_argument("--search-string",
                              type=str,
                              required=True,
                              help="Deploy uuid")
-teardown_parser.add_argument("--template",
-                              dest="template",
-                              type=str,
-                              required=False,
-                              help="Juju deployer template")
 
 deploy_parser = subparsers.add_parser('deploy')
 deploy_parser.add_argument("--search-string",
@@ -209,14 +204,6 @@ class Deployer(object):
     def __init__(self, options):
         self.options = options
         self.search_string = self.options.search_string
-        self.bundle = self.options.template
-        with open(self.bundle, "r") as stream:
-            self.services = [m for m in yaml.load(stream)['services']]
-        LOG.debug(self.services)
-        if self.options.action == "deploy":
-            self.max_unit_retries = self.options.max_unit_retries
-            self.timeout = self.options.timeout
-            self.max_machine_retries = self.options.max_machine_retries
         self.units = {}
         self.machines = {}
         self.home = os.environ.get("HOME", "/tmp")
@@ -247,7 +234,16 @@ class Deployer(object):
         self.machine_lock = lock.Semaphore(value=1)
         self.deleted_machines = []
         self.tags = {}
-        self._map_applications_to_tags()
+        if self.options.action == "deploy":
+            self.bundle = self.options.template
+            with open(self.bundle, "r") as stream:
+                self.services = [m for m in yaml.load(stream)['services']]
+            LOG.debug(self.services)
+
+            self.max_unit_retries = self.options.max_unit_retries
+            self.timeout = self.options.timeout
+            self.max_machine_retries = self.options.max_machine_retries
+            self._map_applications_to_tags()
 
     def _map_applications_to_tags(self):
         with open(self.bundle, 'r') as file:
