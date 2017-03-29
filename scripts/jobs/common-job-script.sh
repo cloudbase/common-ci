@@ -45,7 +45,7 @@ build_exit_code=$?
 source $WORKSPACE/nodes
     
 exec_with_retry 5 2 ssh -tt -o 'PasswordAuthentication=no' -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i $JUJU_SSH_KEY ubuntu@$DEVSTACK \
-    "git clone https://github.com/cloudbase/common-ci.git /home/ubuntu/common-ci"
+    "git clone https://github.com/capsali/common-ci.git /home/ubuntu/common-ci"
 clone_exit_code=$?
 
 exec_with_retry 5 2 ssh -tt -o 'PasswordAuthentication=no' -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i $JUJU_SSH_KEY ubuntu@$DEVSTACK \
