@@ -29,6 +29,7 @@ services:
         extra-python-packages: "git+https://github.com/petrutlucian94/pywinrm.git lxml==3.6.4"
         heat-image-url: ${heat_image_url}
         test-image-url: ${test_image_url}
+        disable-ipv6: ${disable_ipv6}
         ml2-mechanism: openvswitch
         tenant-network-type: vxlan
         enable-tunneling: True
