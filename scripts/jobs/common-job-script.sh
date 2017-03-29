@@ -24,12 +24,13 @@ function exec_with_retry () {
 set -x
 set +e
 
+source ${WORKSPACE}/common-ci/scripts/jobs/${project}-config.sh
+
 DEPLOYER_PATH="/home/ubuntu/deployer"
 JUJU_SSH_KEY="/home/ubuntu/.local/share/juju/ssh/juju_id_rsa"
 LOGS_SERVER="10.20.1.14"
 LOGS_SSH_KEY="/home/ubuntu/.ssh/norman.pem"
 BUNDLE_LOCATION=$(mktemp)
-
 
 eval "cat <<EOF
 $(<${WORKSPACE}/common-ci/templates/bundle.template)
@@ -149,6 +150,11 @@ ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking no" -i $LOGS_SSH
 rm -rf $LOG_DIR
 ##############################################
 
+if [ "$DEBUG" != "YES" ]; then
+    #destroy charms, services and used nodes.
+    $DEPLOYER_PATH/deployer.py  --clouds-and-credentials $DEPLOYER_PATH/$CI_CREDS teardown --search-string $UUID
+fi
+
 if [[ $build_exit_code -ne 0 ]]; then
 	echo "CI Error while deploying environment"
 	exit 1
@@ -168,10 +174,5 @@ if [[ $tests_exit_code -ne 0 ]]; then
 	echo "Tempest tests execution finished with a failure status"
 	exit 1
 fi 
-
-if [ "$DEBUG" != "YES" ]; then
-    #destroy charms, services and used nodes.
-    $DEPLOYER_PATH/deployer.py  --clouds-and-credentials $DEPLOYER_PATH/$CI_CREDS teardown --search-string $UUID
-fi
 
 exit 0
