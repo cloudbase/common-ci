@@ -59,8 +59,8 @@ if [[ $build_exit_code -eq 0 ]]; then
     exec_with_retry 5 2 ssh -tt -o 'PasswordAuthentication=no' -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i $JUJU_SSH_KEY ubuntu@$DEVSTACK \
         "mkdir -p /home/ubuntu/tempest"
 	ssh -tt -o 'PasswordAuthentication=no' -o 'StrictHostKeyChecking=no' -o 'UserKnownHostsFile=/dev/null' -i $JUJU_SSH_KEY ubuntu@$DEVSTACK \
-       "/home/ubuntu/common-ci/scripts/bin/run-all-tests.sh --include-file /home/ubuntu/common-ci/tests/$project/included_tests.txt \
-       --exclude-file /home/ubuntu/common-ci/tests/$project/excluded_tests.txt --isolated-file /home/ubuntu/common-ci/tests/$project/isolated_tests.txt \
+       "/home/ubuntu/common-ci/scripts/bin/run-all-tests.sh --include-file /home/ubuntu/common-ci/tests/$project/included-tests.txt \
+       --exclude-file /home/ubuntu/common-ci/tests/$project/excluded-tests.txt --isolated-file /home/ubuntu/common-ci/tests/$project/isolated-tests.txt \
        --tests-dir /opt/stack/tempest --parallel-tests 10 --max-attempts 2"
 	tests_exit_code=$?
 fi 
