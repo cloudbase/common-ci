@@ -113,18 +113,16 @@ wget http://10.20.1.3:8080/job/$JOB_NAME/$BUILD_ID/consoleText -O $LOG_DIR/conso
 
 find $LOG_DIR -name "*.log" -exec gzip {} \;
 
-tar -zcf $LOG_DIR/aggregate.tar.gz $LOG_DIR
+pushd $LOG_DIR
+tar -zcf aggregate.tar.gz .
+popd
+#tar -zcf $LOG_DIR/aggregate.tar.gz $LOG_DIR
 
 if [ $project == "ovs" ]; then
     if [ ! $UUID ]; then
         exit 1
     fi
     REMOTE_LOG_PATH="/srv/logs/ovs/tempest-run/$UUID"
-elif [ $network_type == "ovs" ]; then
-    if [ ! $project ] || [ ! $ZUUL_CHANGE ] || [ ! $ZUUL_PATCHSET ]; then
-        exit 1
-    fi
-    REMOTE_LOG_PATH="/srv/logs/${project}-ovs/$ZUUL_CHANGE/$ZUUL_PATCHSET"
 else
     if [ ! $project ] || [ ! $ZUUL_CHANGE ] || [ ! $ZUUL_PATCHSET ]; then
         exit 1
