@@ -57,6 +57,7 @@ if [ -z "$RESULTS_HTML_FILE" ]; then RESULTS_HTML_FILE="/home/ubuntu/tempest/res
 
 BASEDIR=$(dirname $0)
 SUBUNIT_STATS="/home/ubuntu/tempest/subunit_stats.log"
+TEMPEST_OUTPUT="/home/ubuntu/tempest/tempest-output.log"
 
 pushd $BASEDIR
 
@@ -100,6 +101,8 @@ deactivate
 
 echo "Generating HTML report..."
 $BASEDIR/get-results-html.sh $LOG_FILE $RESULTS_HTML_FILE
+
+cat $LOG_FILE | subunit-trace -n -f > $TEMPEST_OUTPUT 2>&1 || true
 
 subunit-stats $LOG_FILE > $SUBUNIT_STATS #/dev/null
 exit_code=$?

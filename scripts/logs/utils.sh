@@ -182,10 +182,13 @@ function archive_devstack_configs() {
 
 function archive_tempest_files() {
     local TEMPEST_LOGS="/home/ubuntu/tempest"
-
+    local LOG_DST_TEMPEST=${1:-$LOG_DST/tempest}
+    if [ ! -d "$LOG_DST_TEMPEST" ]; then
+         mkdir -p "$LOG_DST_TEMPEST"
+    fi
     for i in `ls -A $TEMPEST_LOGS`
     do
-        $GZIP "$TEMPEST_LOGS/$i" -c > "$LOG_DST/$i.gz" || emit_error "L133: Failed to archive tempest logs"
+        $GZIP "$TEMPEST_LOGS/$i" -c > "$LOG_DST_TEMPEST/$i.gz" || emit_error "L133: Failed to archive tempest logs"
     done
 }
 

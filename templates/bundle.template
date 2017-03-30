@@ -29,18 +29,16 @@ services:
         extra-python-packages: "git+https://github.com/petrutlucian94/pywinrm.git lxml==3.6.4"
         heat-image-url: ${heat_image_url}
         test-image-url: ${test_image_url}
-#        ip-version: ${ip_version}
         ml2-mechanism: openvswitch
         tenant-network-type: vxlan
         enable-tunneling: True
         enable-live-migration: True
         ntp-server: pool.ntp.org
         vlan-range: 2500:2550
-        nameservers: 10.20.1.37
+        nameservers: 10.20.1.37 8.8.8.8
         enable-vlans: False
         scenario-img: ${scenario_img}
         cherry-picks: ${devstack_cherry_picks}
-        #scenario-img: ubuntu_final.vhdx.zip
         pypi-mirror: http://10.20.1.8:8080/cloudbase/CI/+simple/
         data-port: ${data_port}
         external-port: ${external_port}
@@ -68,7 +66,6 @@ services:
         post-python-packages: "kombu==4.0.1 amqp==2.1.3 SQLAlchemy==1.0.17"
         git-user-email: "mcapsali@gmail.com"
         git-user-name: "capsali"
-        # cherry-picks: "neutron|https://review.openstack.org/openstack/neutron|refs/changes/77/227077/11|21818de8a9041d3e7e63922bb9fa1edc5475adee"
         cherry-picks: "${hyperv_cherry_picks}"
         pypi-mirror: http://10.20.1.8:8080/cloudbase/CI/+simple/
         data-port: ${data_port}
