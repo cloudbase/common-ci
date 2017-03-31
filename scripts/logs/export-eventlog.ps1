@@ -39,7 +39,7 @@ function cleareventlog(){
     }
 }
 
-$eventlogPath = "C:\OpenStack\Logs\Eventlog"
+$eventlogPath = "C:\OpenStack\Log\Eventlog"
 $eventlogcsspath = "C:\Openstack\Eventlog\eventlog_css.txt"
 $eventlogjspath = "C:\Openstack\Eventlog\eventlog_js.txt"
 
