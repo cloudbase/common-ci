@@ -42,6 +42,14 @@ function get_win_files() {
     smbclient "//$host/C\$" -c "prompt OFF; recurse ON; lcd $local_dir; cd $remote_dir; mget *" -U "$win_user%$win_password"
 }
 
+function set_win_files() {
+    local host=$1
+    local remote_dir=$2
+    local local_dir=$3
+    local local_file=$4
+    smbclient "//$host/C\$" --directory $remote_dir -c "prompt OFF; recurse ON; lcd $local_dir; put $local_file" -U "$win_user%$win_password"
+}
+
 function run_wsman_ps() {
     local host=$1
     local cmd=$2

@@ -26,7 +26,7 @@ set +e
 
 source ${WORKSPACE}/common-ci/scripts/jobs/${project}-config.sh
 
-DEPLOYER_PATH="/home/ubuntu/deployer"
+DEPLOYER_PATH="/home/ubuntu/ci-deployer"
 JUJU_SSH_KEY="/home/ubuntu/.local/share/juju/ssh/juju_id_rsa"
 LOGS_SERVER="10.20.1.14"
 LOGS_SSH_KEY="/home/ubuntu/.ssh/norman.pem"
@@ -88,6 +88,12 @@ for hv in $(echo $HYPERV | tr "," "\n"); do
     HV_CONFS=$LOG_DIR/hyperv-config/$hv
     mkdir -p $HV_LOGS
     mkdir -p $HV_CONFS
+
+    run_wsman_ps $hv "New-Item -Force -Type directory -Path C:\Openstack\Eventlog"
+    set_win_files $hv "\Openstack\Eventlog" "${WORKSPACE}/common-ci/scripts/logs/" "export-eventlog.ps1"
+    set_win_files $hv "\Openstack\Eventlog" "${WORKSPACE}/common-ci/templates/" "eventlog_css.txt"
+    set_win_files $hv "\Openstack\Eventlog" "${WORKSPACE}/common-ci/templates/" "eventlog_js.txt"
+    run_wsman_ps $hv "C:\Openstack\Eventlog\export-eventlog.ps1"
 
     get_win_files $hv "\openstack\log" $HV_LOGS
     get_win_files $hv "\openstack\etc" $HV_CONFS

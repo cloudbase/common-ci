@@ -1,3 +1,5 @@
+#!/bin/bash
+
 CI_CREDS="ovs-creds.yaml"
 test_signing="true"
 data_port="E4:1D:2D:22:A0:30 E4:1D:2D:22:A6:30 E4:1D:2D:22:A1:E0 24:8A:07:77:3D:00"
@@ -9,7 +11,7 @@ hyperv_cherry_picks="https://review.openstack.org/openstack/neutron|refs/changes
 devstack_cherry_picks="https://git.openstack.org/openstack/tempest|refs/changes/49/383049/13|master,https://git.openstack.org/openstack/tempest|refs/changes/28/384528/9|master"
 disable_ipv6="false"
 win_user="Administrator"
-win_password="Passw0rd"
+win_password=$(openssl rand -base64 32)
 ovs_installer="http://10.20.1.14:8080/ovs/$UUID/OpenvSwitch.msi"
 ovs_certificate="http://10.20.1.14:8080/ovs/$UUID/package.cer"
 heat_image_url="http://10.20.1.14:8080/cirros-latest.vhdx"
