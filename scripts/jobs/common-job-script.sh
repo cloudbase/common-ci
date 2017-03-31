@@ -26,7 +26,7 @@ set +e
 
 source ${WORKSPACE}/common-ci/scripts/jobs/${project}-config.sh
 
-DEPLOYER_PATH="/home/ubuntu/ci-deployer"
+DEPLOYER_PATH="/home/ubuntu/deployer"
 JUJU_SSH_KEY="/home/ubuntu/.local/share/juju/ssh/juju_id_rsa"
 LOGS_SERVER="10.20.1.14"
 LOGS_SSH_KEY="/home/ubuntu/.ssh/norman.pem"
