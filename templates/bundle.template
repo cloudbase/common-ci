@@ -9,11 +9,11 @@ services:
       series: win2016
       constraints: "tags=$ADTAGS"
       options:
-        administrator-password: ${win_password}
-        safe-mode-password: ${win_password}
+        administrator-password: ${ad_password}
+        safe-mode-password: ${ad_password}
         domain-name: openvswitch.local
         domain-user: "openvswitch"
-        domain-user-password: ${win_password}
+        domain-user-password: ${ad_password}
     devstack-${UUID}:
       charm: /home/ubuntu/charms/ubuntu/devstack
       num_units: 1
