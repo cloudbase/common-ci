@@ -47,6 +47,11 @@ function set_win_files() {
     local remote_dir=$2
     local local_dir=$3
     local local_file=$4
+    smbclient "//$host/C\$" -c "prompt OFF; cd $remote_dir" -U "$win_user%$win_password"
+    if [ $? -ne 0 ];then
+        echo "Folder $remote_dir does not exists"
+        return 0
+    fi
     smbclient "//$host/C\$" --directory $remote_dir -c "prompt OFF; recurse ON; lcd $local_dir; put $local_file" -U "$win_user%$win_password"
 }
 
