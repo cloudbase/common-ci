@@ -11,8 +11,8 @@ services:
       options:
         administrator-password: ${ad_password}
         safe-mode-password: ${ad_password}
-        domain-name: openvswitch.local
-        domain-user: "openvswitch"
+        domain-name: ${domain_name}
+        domain-user: ${domain_user}
         domain-user-password: ${ad_password}
     devstack-${UUID}:
       charm: /home/ubuntu/charms/ubuntu/devstack

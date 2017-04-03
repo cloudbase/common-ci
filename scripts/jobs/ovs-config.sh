@@ -1,6 +1,8 @@
 #!/bin/bash
 
 CI_CREDS="ovs-creds.yaml"
+domain_name="openvswitch.local"
+domain_user="openvswitch"
 test_signing="true"
 data_port="E4:1D:2D:22:A0:30 E4:1D:2D:22:A6:30 E4:1D:2D:22:A1:E0 24:8A:07:77:3D:00"
 external_port="18:A9:05:58:F7:76 00:23:7D:D2:CF:02 00:23:7D:D2:D8:D2 00:23:7D:D2:D8:72"
