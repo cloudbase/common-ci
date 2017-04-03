@@ -18,3 +18,9 @@ heat_image_url="http://10.20.1.14:8080/cirros-latest.vhdx"
 test_image_url="http://10.20.1.14:8080/cirros-latest.vhdx"
 scenario_img="cirros-latest.vhdx"
 vmswitch_management="false"
+hv_extra_python_packages="setuptools SQLAlchemy==0.9.8 wmi oslo.i18n==1.7.0 pbr==1.2.0 oslo.messaging==4.5.1 lxml==3.6.4"
+post_python_packages="kombu==4.0.1 amqp==2.1.3 SQLAlchemy==1.0.17"
+
+if [ "$ZUUL_BRANCH" == "stable/mitaka" ]; then
+        post_python_packages="oslo.messaging==5.20.0 psutil==1.2.1 kombu==4.0.1 amqp==2.1.3 SQLAlchemy==1.0.17"
+fi

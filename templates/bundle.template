@@ -62,8 +62,8 @@ services:
         test-signing: ${test_signing}
         network-type: ovs
         os-data-network: ${os_data_network}
-        extra-python-packages: "setuptools SQLAlchemy==0.9.8 wmi oslo.i18n==1.7.0 pbr==1.2.0 oslo.messaging==4.5.1 lxml==3.6.4"
-        post-python-packages: "kombu==4.0.1 amqp==2.1.3 SQLAlchemy==1.0.17"
+        extra-python-packages: ${hv_extra_python_packages} 
+        post-python-packages: ${post_python_packages}
         git-user-email: "mcapsali@gmail.com"
         git-user-name: "capsali"
         cherry-picks: "${hyperv_cherry_picks}"
