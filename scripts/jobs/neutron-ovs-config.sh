@@ -16,7 +16,6 @@ heat_image_url="http://10.20.1.14:8080/cirros-latest.vhdx"
 test_image_url="http://10.20.1.14:8080/cirros-latest.vhdx"
 scenario_img="cirros-latest.vhdx"
 vmswitch_management="false"
-hv_extra_python_packages="setuptools SQLAlchemy==0.9.8 wmi oslo.i18n==1.7.0 pbr==1.2.0 oslo.messaging==4.5.1 lxml==3.6.4"
 
 if [ "$ZUUL_BRANCH" == "master" ]; then
       hyperv_cherry_picks="https://review.openstack.org/openstack/neutron|refs/changes/41/417141/2|master"
