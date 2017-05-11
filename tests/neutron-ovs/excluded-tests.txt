@@ -1,0 +1,19 @@
+# Rescue (to be removed when the feature is added)
+tempest.api.compute.servers.test_server_rescue.ServerRescueTestJSON.
+tempest.api.compute.servers.test_server_rescue_negative.ServerRescueNegativeTestJSON.
+
+# Hyper-V does not support attaching vNics to a running instance 
+tempest.api.compute.servers.test_attach_interfaces.AttachInterfacesTestJSON.test_create_list_show_delete_interfaces
+tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_hotplug_nic
+tempest.scenario.test_network_basic_ops.TestNetworkBasicOps.test_port_security_macspoofing_port
+
+# See Tempest bug: https://bugs.launchpad.net/tempest/+bug/1363986
+tempest.scenario.test_security_groups_basic_ops.TestSecurityGroupsBasicOps
+
+#Need investigation - were failing on cinder ci as well
+tempest.scenario.test_volume_boot_pattern.TestVolumeBootPattern.test_volume_boot_pattern
+tempest.scenario.test_volume_boot_pattern.TestVolumeBootPatternV2.test_volume_boot_pattern
+tempest.api.compute.admin.test_live_migration.LiveBlockMigration
+
+# Temporary added to exclude on 05/07/2016
+tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON.test_create_backup

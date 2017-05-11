@@ -56,6 +56,8 @@ if [ -z "$LOG_FILE" ]; then LOG_FILE="/home/ubuntu/tempest/subunit-output.log"; 
 if [ -z "$RESULTS_HTML_FILE" ]; then RESULTS_HTML_FILE="/home/ubuntu/tempest/results.html"; fi
 
 BASEDIR=$(dirname $0)
+SUBUNIT_STATS="/home/ubuntu/tempest/subunit_stats.log"
+TEMPEST_OUTPUT="/home/ubuntu/tempest/tempest-output.log"
 
 pushd $BASEDIR
 
@@ -82,11 +84,14 @@ $BASEDIR/parallel-test-runner.sh $TESTS_FILE $TESTS_DIR $LOG_FILE \
 
 if [ -f "$ISOLATED_FILE" ]; then
     echo "Running isolated tests from: $ISOLATED_FILE"
+    isolated_tests_file=$(tempfile)
+    $BASEDIR/get-isolated-tests.sh $TESTS_DIR $ISOLATED_FILE $EXCLUDE_FILE > $isolated_tests_file
     log_tmp=$(tempfile)
-    $BASEDIR/parallel-test-runner.sh $ISOLATED_FILE $TESTS_DIR $log_tmp \
+    $BASEDIR/parallel-test-runner.sh $isolated_tests_file $TESTS_DIR $log_tmp \
         $PARALLEL_TESTS $MAX_ATTEMPTS 1 || true
 
     cat $log_tmp >> $LOG_FILE
+    rm $isolated_tests_file
     rm $log_tmp
 fi
 
@@ -97,7 +102,9 @@ deactivate
 echo "Generating HTML report..."
 $BASEDIR/get-results-html.sh $LOG_FILE $RESULTS_HTML_FILE
 
-subunit-stats $LOG_FILE > /dev/null
+cat $LOG_FILE | subunit-trace -n -f > $TEMPEST_OUTPUT 2>&1 || true
+
+subunit-stats $LOG_FILE > $SUBUNIT_STATS #/dev/null
 exit_code=$?
 
 echo "Total execution time: $SECONDS seconds."

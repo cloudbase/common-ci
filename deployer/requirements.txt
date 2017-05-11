@@ -1,3 +1,0 @@
-gevent==1.0
-gzr+lp:~gabriel-samfira/python-jujuclient/python-jujuclient
-pyyaml

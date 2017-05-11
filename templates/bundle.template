@@ -1,0 +1,77 @@
+relations:
+  - ["devstack-${UUID}", "hyperv-${UUID}"]
+  - ["active-directory", "hyperv-${UUID}"]
+
+services:
+    active-directory:
+      charm: cs:~cloudbaseit/active-directory-5
+      num_units: 1
+      series: win2016
+      constraints: "tags=$ADTAGS"
+      options:
+        administrator-password: ${ad_password}
+        safe-mode-password: ${ad_password}
+        domain-name: ${domain_name}
+        domain-user: ${domain_user}
+        domain-user-password: ${ad_password}
+    devstack-${UUID}:
+      charm: /home/ubuntu/charms/ubuntu/devstack
+      num_units: 1
+      constraints: "tags=$TAGS"
+      series: xenial
+      options:
+        disabled-services: horizon n-novnc n-net n-cpu ceilometer-acompute s-proxy s-object s-container s-account
+        enabled-services: rabbit mysql key n-api n-crt n-obj n-cond n-sch n-cauth
+          neutron q-svc q-agt q-dhcp q-l3 q-meta q-lbaas q-fwaas q-metering q-vpn
+          g-api g-reg cinder c-api c-vol c-sch heat h-api h-api-cfn h-api-cw h-eng tempest
+        extra-packages: build-essential libpython-all-dev python-all python-dev python3-all
+          python3-dev g++ g++-4.8 pkg-config libvirt-dev smbclient libxml2-dev libxslt1-dev zlib1g-dev
+        extra-python-packages: "git+https://github.com/petrutlucian94/pywinrm.git lxml==3.6.4"
+        heat-image-url: ${heat_image_url}
+        test-image-url: ${test_image_url}
+        ml2-mechanism: openvswitch
+        tenant-network-type: vxlan
+        enable-tunneling: True
+        enable-live-migration: True
+        ntp-server: pool.ntp.org
+        vlan-range: 2500:2550
+        nameservers: 10.20.1.37 8.8.8.8
+        enable-vlans: False
+        scenario-img: ${scenario_img}
+        cherry-picks: ${devstack_cherry_picks}
+        pypi-mirror: http://10.20.1.8:8080/cloudbase/CI/+simple/
+        data-port: ${data_port}
+        external-port: ${external_port}
+        zuul-branch: ${ZUUL_BRANCH}
+        zuul-change: "${ZUUL_CHANGE}"
+        zuul-project: ${ZUUL_PROJECT}
+        zuul-ref: ${ZUUL_REF}
+        zuul-url: ${ZUUL_URL}
+        prep-project: ${prep_project}
+        pip-version: "pip==8.1.1"
+    hyperv-${UUID}:
+      charm: /home/ubuntu/charms/windows/hyper-v-ci
+      num_units: 2
+      series: win2016
+      constraints: "tags=$TAGS"
+      options:
+        administrator-password: ${win_password}
+        vmswitch-management: ${vmswitch_management}
+        ovs-installer-url: ${ovs_installer}
+        ovs-certificate-url: ${ovs_certificate}
+        test-signing: ${test_signing}
+        network-type: ovs
+        os-data-network: ${os_data_network}
+        extra-python-packages: ${hv_extra_python_packages} 
+        post-python-packages: ${post_python_packages}
+        git-user-email: "mcapsali@gmail.com"
+        git-user-name: "capsali"
+        cherry-picks: "${hyperv_cherry_picks}"
+        pypi-mirror: http://10.20.1.8:8080/cloudbase/CI/+simple/
+        data-port: ${data_port}
+        zuul-branch: ${ZUUL_BRANCH}
+        zuul-change: "${ZUUL_CHANGE}"
+        zuul-project: ${ZUUL_PROJECT}
+        zuul-ref: ${ZUUL_REF}
+        zuul-url: ${ZUUL_URL}
+        pip-version: "pip==8.1.1"
